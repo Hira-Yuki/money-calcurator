@@ -1,47 +1,121 @@
 import React, { useEffect, useState } from "react";
 import InputButton from "./Buttons/InputButton";
+import History from "./History";
 
 function Calculator() {
   const [displayNumber, setDisplayNumber] = useState("0");
   const [log, setLog] = useState([]);
-  const [operator, setOperator] = useState(null);
+  const [operator, setOperator] = useState(false);
   const [lastInput, setLastInput] = useState(null);
+  const [mathematical, setMathematical] = useState("");
+  const [result, setResult] = useState("");
+
   const lastIndex = log.length - 1;
 
-  const alertMsg = {
+  const alertMessages = {
     calEnd: '계산이 종료된 상태입니다. "AC" 버튼을 누른 후 새로 시작하세요.',
     noOperator: "식이 올바르지 않아요!",
   };
 
+  useEffect(() => {
+    setMathematical((prev) => log.join(""));
+  }, [log]);
+
+  useEffect(() => {
+    calculateResult();
+  }, [mathematical]);
+
+  useEffect(() => {
+    if (result.length >= 10) {
+      setResult("infinity");
+    }
+  }, [result]);
+
+  const calculateResult = () => {
+    try {
+      const expression = mathematical
+        .replace(/×/g, "*")
+        .replace(/÷/g, "/")
+        .slice(0, -1);
+      const evalResult = eval(expression);
+      setResult((prev) => parseInt(evalResult));
+      if (result.length > 10) {
+        setResult("infinity");
+      } else if (!result) {
+        setResult("숫자 아님");
+      }
+    } catch (error) {
+      setResult("에러, 로그를 확인해 주세요.");
+      console.log(error);
+    }
+  };
+
   const handleButtonClick = (value) => {
     if (value === "AC") {
-      setLog([]);
-      setDisplayNumber("0");
-      setOperator(null);
-      setLastInput(null);
+      clearCalculator();
       return;
     } else if (value === "C") {
-      setDisplayNumber("0");
+      clearDisplay();
       return;
     } else if (!isNaN(value)) {
-      if (["+", "-", "×", "÷"].includes(lastInput)) {
-        setDisplayNumber(value);
-      } else if (displayNumber === "0") {
-        setDisplayNumber(value);
-      } else {
-        setDisplayNumber(displayNumber + value);
-      }
+      handleNumericInput(value);
     } else if (["+", "-", "×", "÷"].includes(value)) {
-      if (["+", "-", "×", "÷"].includes(lastInput)) {
-        const updatedLog = [...log];
-        updatedLog[lastIndex] = value;
-        setLog(updatedLog);
+      handleOperatorInput(value);
+    } else if (value === "=") {
+      handleEqualsInput();
+    }
+    setLastInput(value);
+  };
+
+  const clearCalculator = () => {
+    setLog([]);
+    clearDisplay();
+    setOperator(false);
+    setLastInput(null);
+    setMathematical("");
+    setResult("");
+  };
+
+  const clearDisplay = () => {
+    setDisplayNumber("0");
+  };
+
+  const handleNumericInput = (value) => {
+    if (operator) {
+      setOperator(false);
+      setDisplayNumber(value);
+      return;
+    }
+    if (["+", "-", "×", "÷"].includes(lastInput) || displayNumber === "0") {
+      setDisplayNumber(value);
+    } else {
+      if (displayNumber.length >= 10) {
+        return;
       }
+      setDisplayNumber(displayNumber + value);
+    }
+  };
+
+  const handleOperatorInput = (value) => {
+    setOperator(true);
+    if (["+", "-", "×", "÷"].includes(lastInput)) {
+      const updatedLog = [...log];
+      updatedLog[lastIndex] = value;
+      setLog(updatedLog);
+    } else {
       setLog([...log, displayNumber, value]);
     }
+  };
 
-    setLastInput((prev) => value);
-    console.log(log);
+  const handleEqualsInput = () => {
+    if (log[lastIndex] === "=") {
+      alert(alertMessages.calEnd);
+      return;
+    } else if (operator) {
+      alert(alertMessages.noOperator);
+      return;
+    }
+    setLog([...log, displayNumber, "="]);
   };
 
   return (
@@ -62,12 +136,7 @@ function Calculator() {
           </div>
         </div>
       </div>
-      <div>
-        <h2>기록</h2>
-        {log.map((log) => (
-          <p>{log}</p>
-        ))}
-      </div>
+      <History log={log} result={result} />
     </div>
   );
 }
