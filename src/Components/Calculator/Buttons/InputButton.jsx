@@ -1,7 +1,7 @@
 import React from "react";
 import Button from "./Button";
 
-function NumberButton({ onNumberClick }) {
+function InputButton({ onNumberClick }) {
   const numbers = [
     "7",
     "8",
@@ -85,7 +85,7 @@ function NumberButton({ onNumberClick }) {
         ))}
         <Button
           className="plus-button w-1/4 h-full bg-yellow-500 border border-black"
-          key="+"
+          key="plus"
           label="+"
           onClick={onNumberClick}
         />
@@ -93,7 +93,7 @@ function NumberButton({ onNumberClick }) {
       <div className="button-row h-1/5">
         <Button
           className="zero-button w-2/4 h-full bg-gray-500 border border-black"
-          key="zero"
+          key="0"
           label="0"
           onClick={onNumberClick}
         />
@@ -114,4 +114,4 @@ function NumberButton({ onNumberClick }) {
   );
 }
 
-export default NumberButton;
+export default InputButton;

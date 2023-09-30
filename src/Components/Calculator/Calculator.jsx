@@ -1,69 +1,72 @@
 import React, { useEffect, useState } from "react";
-import NumberButton from "./Buttons/NumberButton";
+import InputButton from "./Buttons/InputButton";
 
 function Calculator() {
-  const [displayNumber, setDisplayNumber] = useState(0);
-  const [prevInput, setPrevInput] = useState(null);
+  const [displayNumber, setDisplayNumber] = useState("0");
+  const [log, setLog] = useState([]);
   const [operator, setOperator] = useState(null);
+  const [lastInput, setLastInput] = useState(null);
+  const lastIndex = log.length - 1;
 
-  useEffect(() => {
-    if (displayNumber.length > 10) {
-      setDisplayNumber("Infinity");
-    }
-
-    if (displayNumber < 0) {
-      // 결과가 0보다 작은 음수의 경우 0으로 초기화
-      setDisplayNumber(0);
-    }
-  }, [displayNumber]);
+  const alertMsg = {
+    calEnd: '계산이 종료된 상태입니다. "AC" 버튼을 누른 후 새로 시작하세요.',
+    noOperator: "식이 올바르지 않아요!",
+  };
 
   const handleButtonClick = (value) => {
-    // 버튼 클릭 처리 로직
     if (value === "AC") {
-      // AC 버튼을 클릭한 경우
-      setDisplayNumber(0);
-    }
-
-    if (displayNumber === "Infinity") {
+      setLog([]);
+      setDisplayNumber("0");
+      setOperator(null);
+      setLastInput(null);
       return;
-    }
-
-    if (value === "C") {
-      // C 버튼을 클릭한 경우
-      if (displayNumber.length > 1) {
-        setDisplayNumber((prevInput) => prevInput.slice(0, -1)); // 맨 마지막 글자 삭제
-      } else if (displayNumber.length <= 1) {
-        setDisplayNumber(0); // 더 이상 지울 글자가 없으면 "0"으로 설정
-      }
-    }
-
-    if (!isNaN(value)) {
-      if (displayNumber === 0) {
+    } else if (value === "C") {
+      setDisplayNumber("0");
+      return;
+    } else if (!isNaN(value)) {
+      if (["+", "-", "×", "÷"].includes(lastInput)) {
         setDisplayNumber(value);
-        return;
-      }
-
-      if (displayNumber.length < 10) {
-        setDisplayNumber((prevInput) => prevInput + value);
+      } else if (displayNumber === "0") {
+        setDisplayNumber(value);
       } else {
-        setDisplayNumber("Infinity");
+        setDisplayNumber(displayNumber + value);
       }
+    } else if (["+", "-", "×", "÷"].includes(value)) {
+      if (["+", "-", "×", "÷"].includes(lastInput)) {
+        const updatedLog = [...log];
+        updatedLog[lastIndex] = value;
+        setLog(updatedLog);
+      }
+      setLog([...log, displayNumber, value]);
     }
+
+    setLastInput((prev) => value);
+    console.log(log);
   };
+
   return (
-    <div className="calculator text-5xl text-white overflow-hidden rounded-xl">
-      <div className="display">
-        <input
-          className="w-full h-32 text-right text-7xl bg-gray-700 pr-3"
-          type="text"
-          value={displayNumber}
-          readOnly
-        />
-      </div>
-      <div className="buttons">
-        <div className="button-row">
-          <NumberButton onNumberClick={handleButtonClick} />
+    <div>
+      <div className="calculator text-5xl text-white overflow-hidden rounded-xl">
+        <div className="display">
+          <input
+            className="w-full h-32 text-right text-7xl bg-gray-700 pr-3"
+            type="text"
+            value={displayNumber}
+            readOnly
+          />
         </div>
+        <div className="buttons">
+          <div className="button-row">
+            {/* 0~9 숫자 버튼, 사칙연산 버튼과 등호, 소숫점 기호 버튼이 포함되어 있습니다. */}
+            <InputButton onNumberClick={handleButtonClick} />
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2>기록</h2>
+        {log.map((log) => (
+          <p>{log}</p>
+        ))}
       </div>
     </div>
   );
